@@ -1,21 +1,25 @@
-const { exec } = require("child_process");
+const { spawn } = require("child_process");
 const path = require("path");
 const { parseNmapFile } = require("../parsers/nmap");
 
 function runNmap(ctx, args) {
   return new Promise(resolve => {
-    const nmapArgs = args.join(" ");
     const outputFile = path.join(__dirname, "../../nmap_output.xml");
 
-    console.log(`Nmap çalıştırılıyor: nmap ${nmapArgs}`);
+    const nmap = spawn("nmap", [...args, "-oX", outputFile]);
 
-    exec(`nmap ${nmapArgs} -oX ${outputFile}`, async (error) => {
-      if (error) {
-        console.log("Hata:", error.message);
-        return resolve();
-      }
+    console.log("\n--- Nmap Çalışıyor (Canlı Çıktı) ---\n");
 
-      console.log("Nmap taraması tamamlandı. Çıktı parse ediliyor...");
+    nmap.stdout.on("data", data => {
+      process.stdout.write(data.toString());
+    });
+
+    nmap.stderr.on("data", data => {
+      process.stdout.write(data.toString());
+    });
+
+    nmap.on("close", async () => {
+      console.log("\n--- Nmap Bitti, Çıktı Parse Ediliyor ---\n");
 
       try {
         const { issues, nextId } = await parseNmapFile(outputFile, ctx.nextId);
@@ -33,15 +37,7 @@ function runNmap(ctx, args) {
 }
 
 function runNmapFull(ctx, target) {
-  return runNmap(ctx, [
-    "-sV",
-    "-sC",
-    "-A",
-    "-O",
-    "-p-",
-    "-T4",
-    target
-  ]);
+  return runNmap(ctx, ["-sV", "-sC", "-A", "-O", "-p-", "-T4", target]);
 }
 
 module.exports = { runNmap, runNmapFull };

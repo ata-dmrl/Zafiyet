@@ -1,21 +1,32 @@
-const { exec } = require("child_process");
+const { spawn } = require("child_process");
 const path = require("path");
 const { parseZapFile } = require("../parsers/zap");
+
+function getZapCommand() {
+  return process.platform === "win32" ? "zap.bat" : "zap.sh";
+}
 
 function runZap(ctx, args) {
   return new Promise(resolve => {
     const target = args[0];
     const outputFile = path.join(__dirname, "../../zap_output.json");
 
-    console.log(`ZAP hızlı tarama başlatılıyor: ${target}`);
+    const zapCmd = getZapCommand();
 
-    exec(`zap.sh -cmd -quickurl ${target} -quickout ${outputFile}`, (error) => {
-      if (error) {
-        console.log("Hata:", error.message);
-        return resolve();
-      }
+    console.log(`\n--- ZAP Hızlı Tarama Başlıyor: ${target} ---\n`);
 
-      console.log("ZAP taraması tamamlandı. Çıktı parse ediliyor...");
+    const zap = spawn(zapCmd, ["-cmd", "-quickurl", target, "-quickout", outputFile]);
+
+    zap.stdout.on("data", data => {
+      process.stdout.write(data.toString());
+    });
+
+    zap.stderr.on("data", data => {
+      process.stdout.write(data.toString());
+    });
+
+    zap.on("close", () => {
+      console.log("\n--- ZAP Bitti, Çıktı Parse Ediliyor ---\n");
 
       try {
         const { issues, nextId } = parseZapFile(outputFile, ctx.nextId);
@@ -33,32 +44,8 @@ function runZap(ctx, args) {
 }
 
 function runZapFull(ctx, target) {
-  return new Promise(resolve => {
-    const outputFile = path.join(__dirname, "../../zap_output.json");
-
-    console.log(`ZAP TAM TARAMA başlatılıyor: ${target}`);
-
-    exec(`zap.sh -cmd -quickurl ${target} -quickout ${outputFile} -fullscan`, (error) => {
-      if (error) {
-        console.log("Hata:", error.message);
-        return resolve();
-      }
-
-      console.log("ZAP tam tarama tamamlandı. Çıktı parse ediliyor...");
-
-      try {
-        const { issues, nextId } = parseZapFile(outputFile, ctx.nextId);
-        ctx.issues.push(...issues);
-        ctx.nextId = nextId;
-
-        console.log(`Toplam ${issues.length} yeni zafiyet eklendi.`);
-      } catch (e) {
-        console.log("Parse hatası:", e.message);
-      }
-
-      resolve();
-    });
-  });
+  const zapCmd = getZapCommand();
+  return runZap(ctx, ["full", target]);
 }
 
 module.exports = { runZap, runZapFull };
