@@ -5,15 +5,14 @@ XAS, hem ağ hem de web uygulaması güvenlik testlerinde kullanılmak üzere ta
 modüler, genişletilebilir ve tamamen CLI tabanlı bir güvenlik analiz konsoludur.
 
 Özellikler:
-✅Nmap hızlı tarama
-✅Nmap tam tarama
-✅ZAP hızlı tarama
-✅ZAP tam tarama
-✅Nmap & ZAP çıktılarını otomatik parse etme
-✅Zafiyetleri severity’ye göre listeleme
-✅Her zafiyet için çözüm rehberi (fix guide)
-✅TXT & HTML rapor oluşturma
-✅Modüler runner ve parser mimarisi
+✅ Nmap hızlı tarama
+✅ Nmap tam tarama
+✅ ZAP hızlı tarma
+✅ ZAP tam tarama
+✅ Nmap & ZAP çıktılarını otomatik parse etme
+✅ Her zafiyet için çözüm rehberi (fix guide)
+✅ TXT & HTML rapor oluşturma
+✅ Modüler runner ve parser mimarisi
 
 ------------------------------------------------------------
 # 📁 PROJE YAPISI
