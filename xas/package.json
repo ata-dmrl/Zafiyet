@@ -1,0 +1,16 @@
+{
+  "name": "xas",
+  "version": "1.0.0",
+  "description": "XAS - Extended Analysis System (Nmap & ZAP passive analyzer)",
+  "main": "src/index.js",
+  "scripts": {
+   "start": "node src/index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "xml2js": "^0.6.2"
+  }
+}

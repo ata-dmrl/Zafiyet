@@ -1,0 +1,50 @@
+// src/issue.js
+
+const SEVERITY_COLORS = {
+  critical: "\x1b[35m", // mor
+  high: "\x1b[31m",     // kırmızı
+  medium: "\x1b[33m",   // sarı
+  low: "\x1b[36m",      // cyan
+  info: "\x1b[37m"      // beyaz
+};
+
+function color(text, colorCode) {
+  return `${colorCode}${text}\x1b[0m`;
+}
+
+function colorSeverity(severity, text) {
+  const c = SEVERITY_COLORS[severity] || SEVERITY_COLORS.info;
+  return color(text, c);
+}
+
+class Issue {
+  constructor({
+    id,
+    source,
+    host,
+    ip,
+    port,
+    url,
+    severity,
+    title,
+    description,
+    fixKey
+  }) {
+    this.id = id ?? null;
+    this.source = source || "";
+    this.host = host || "";
+    this.ip = ip || "";
+    this.port = port || null;
+    this.url = url || "";
+    this.severity = severity || "info";
+    this.title = title || "";
+    this.description = description || "";
+    this.fixKey = fixKey || null;
+  }
+}
+
+module.exports = {
+  Issue,
+  color,
+  colorSeverity
+};
