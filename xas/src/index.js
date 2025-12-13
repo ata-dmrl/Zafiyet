@@ -1,8 +1,8 @@
 // src/index.js
-
+const { banner } = require("./banner");
 const readline = require("readline");
 const { XasContext, handleCommand } = require("./commands");
-
+banner();
 function startRepl() {
   const ctx = new XasContext();
 
