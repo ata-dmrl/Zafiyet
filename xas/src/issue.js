@@ -8,6 +8,8 @@ const SEVERITY_COLORS = {
   info: "\x1b[37m"      // beyaz
 };
 
+const SEVERITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3, info: 4 };
+
 function color(text, colorCode) {
   return `${colorCode}${text}\x1b[0m`;
 }
@@ -28,7 +30,10 @@ class Issue {
     severity,
     title,
     description,
-    fixKey
+    fixKey,
+    cve,
+    confidence,
+    timestamp
   }) {
     this.id = id ?? null;
     this.source = source || "";
@@ -40,11 +45,16 @@ class Issue {
     this.title = title || "";
     this.description = description || "";
     this.fixKey = fixKey || null;
+    this.cve = cve || null;
+    this.confidence = confidence || null;
+    this.timestamp = timestamp || new Date().toISOString();
   }
 }
 
 module.exports = {
   Issue,
   color,
-  colorSeverity
+  colorSeverity,
+  SEVERITY_ORDER,
+  SEVERITY_COLORS
 };

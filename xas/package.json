@@ -1,12 +1,20 @@
 {
   "name": "xas",
-  "version": "1.0.0",
-  "description": "XAS - Extended Analysis System (Nmap & ZAP passive analyzer)",
+  "version": "2.0.0",
+  "description": "XAS - Extended Analysis System | Beyaz Şapka Güvenlik Analiz Aracı (Nmap & ZAP)",
   "main": "src/index.js",
   "scripts": {
-   "start": "node src/index.js"
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
   },
-  "keywords": [],
+  "keywords": [
+    "security",
+    "vulnerability",
+    "scanner",
+    "nmap",
+    "zap",
+    "pentest"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",

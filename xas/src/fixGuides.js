@@ -161,8 +161,408 @@ const FIX_GUIDES = {
     ],
     recommendation:
       "Özellikle kritik işlemleri (şifre değişikliği, para transferi vb.) CSRF koruması olmadan bırakmayın."
+  },
+
+  // ──────────────── YENİ ZAFİYET TÜRLERİ ────────────────
+
+  smb: {
+    severity: "high",
+    title: "SMB (445/TCP) Açık",
+    steps: [
+      {
+        title: "SMB servisini kapatın veya kısıtlayın",
+        items: [
+          "Gereksiz SMB paylaşımlarını kaldırın",
+          "SMBv1 protokolünü tamamen devre dışı bırakın",
+          "Windows: Set-SmbServerConfiguration -EnableSMB1Protocol $false"
+        ]
+      },
+      {
+        title: "Firewall kuralları ekleyin",
+        items: [
+          "445/TCP portunu sadece güvenilir IP'lere açın",
+          "İnternete açık SMB paylaşımı kesinlikle kapatın"
+        ]
+      },
+      {
+        title: "Güvenlik yamaları uygulayın",
+        items: [
+          "EternalBlue (MS17-010) gibi bilinen exploitler için yamaları kontrol edin",
+          "Sistemi güncel tutun"
+        ]
+      }
+    ],
+    recommendation:
+      "SMB portunu internete açmayın. EternalBlue gibi kritik exploitler bu port üzerinden çalışır."
+  },
+
+  mysql: {
+    severity: "high",
+    title: "MySQL (3306/TCP) Açık",
+    steps: [
+      {
+        title: "MySQL'i sadece localhost'a bağlayın",
+        items: [
+          "my.cnf: bind-address = 127.0.0.1",
+          "Servisini yeniden başlatın: sudo systemctl restart mysql"
+        ]
+      },
+      {
+        title: "Uzak erişimi kısıtlayın",
+        items: [
+          "Root kullanıcısının uzak bağlantı yapamaması için: REVOKE ALL ON *.* FROM 'root'@'%'",
+          "Sadece gerekli kullanıcılara belirli IP'lerden erişim verin"
+        ]
+      },
+      {
+        title: "Firewall kuralları",
+        items: [
+          "3306/TCP portunu sadece uygulama sunucusunun IP'sine açın"
+        ]
+      }
+    ],
+    recommendation:
+      "Veritabanı portlarını asla doğrudan internete açmayın. SSH tüneli veya VPN kullanın."
+  },
+
+  mssql: {
+    severity: "high",
+    title: "MSSQL (1433/TCP) Açık",
+    steps: [
+      {
+        title: "SQL Server erişimini kısıtlayın",
+        items: [
+          "SQL Server Configuration Manager'dan sadece gerekli IP'lere izin verin",
+          "Windows Firewall'da 1433/TCP kuralı oluşturun"
+        ]
+      },
+      {
+        title: "SA hesabını güvenli hale getirin",
+        items: [
+          "SA hesabını devre dışı bırakın veya çok güçlü şifre kullanın",
+          "Windows Authentication modunu tercih edin"
+        ]
+      },
+      {
+        title: "Şifreli bağlantı zorunlu kılın",
+        items: [
+          "Force Encryption seçeneğini etkinleştirin",
+          "TLS sertifikası tanımlayın"
+        ]
+      }
+    ],
+    recommendation:
+      "MSSQL portunu internete açmayın. Brute-force saldırıları bu porta sıkça yapılır."
+  },
+
+  ssh_weak: {
+    severity: "medium",
+    title: "SSH Zayıf Yapılandırma",
+    steps: [
+      {
+        title: "Zayıf cipher ve algoritmaları devre dışı bırakın",
+        items: [
+          "sshd_config dosyasında: Ciphers aes256-gcm@openssh.com,aes128-gcm@openssh.com",
+          "KexAlgorithms curve25519-sha256,diffie-hellman-group16-sha512",
+          "MACs hmac-sha2-256-etm@openssh.com,hmac-sha2-512-etm@openssh.com"
+        ]
+      },
+      {
+        title: "Root login'i kapatın",
+        items: [
+          "PermitRootLogin no",
+          "Key-based authentication kullanın: PasswordAuthentication no"
+        ]
+      },
+      {
+        title: "SSH versiyonunu kontrol edin",
+        items: [
+          "Yalnızca SSHv2 kullanın (Protocol 2)",
+          "OpenSSH'ı güncel tutun"
+        ]
+      }
+    ],
+    recommendation:
+      "SSH servisini en güncel yapılandırma standartlarına göre sıkılaştırın."
+  },
+
+  http_proxy: {
+    severity: "medium",
+    title: "HTTP Proxy (8080/TCP) Açık",
+    steps: [
+      {
+        title: "Proxy erişimini kısıtlayın",
+        items: [
+          "Proxy'yi sadece iç ağda kullanılabilir hale getirin",
+          "Kimlik doğrulama ekleyin"
+        ]
+      },
+      {
+        title: "Gereksizse kapatın",
+        items: [
+          "Kullanılmıyorsa proxy servisini durdurun",
+          "Firewall'da 8080/TCP portunu engelleyin"
+        ]
+      }
+    ],
+    recommendation:
+      "Açık proxy'ler saldırganlar tarafından anonim saldırı aracı olarak kullanılabilir."
+  },
+
+  directory_listing: {
+    severity: "medium",
+    title: "Directory Listing Açık",
+    steps: [
+      {
+        title: "Apache'de kapatın",
+        items: [
+          "httpd.conf veya .htaccess: Options -Indexes",
+          "Servisi yeniden başlatın"
+        ]
+      },
+      {
+        title: "Nginx'te kapatın",
+        items: [
+          "nginx.conf: autoindex off;",
+          "sudo nginx -s reload"
+        ]
+      },
+      {
+        title: "IIS'te kapatın",
+        items: [
+          "IIS Manager → Directory Browsing → Disable"
+        ]
+      }
+    ],
+    recommendation:
+      "Dizin listeleme, saldırganlara dosya yapınızı gösterir. Tüm web sunucularında kapatın."
+  },
+
+  ssl_expired: {
+    severity: "high",
+    title: "SSL/TLS Sertifika Sorunu",
+    steps: [
+      {
+        title: "Sertifikayı yenileyin",
+        items: [
+          "Let's Encrypt kullanıyorsanız: sudo certbot renew",
+          "Ticari sertifika ise sağlayıcınızdan yeni sertifika alın"
+        ]
+      },
+      {
+        title: "TLS yapılandırmasını sıkılaştırın",
+        items: [
+          "TLS 1.2 ve üzeri kullanın, TLS 1.0/1.1 kapatın",
+          "ssl_protocols TLSv1.2 TLSv1.3; (Nginx)",
+          "SSLProtocol all -SSLv3 -TLSv1 -TLSv1.1 (Apache)"
+        ]
+      },
+      {
+        title: "HSTS header ekleyin",
+        items: [
+          "Strict-Transport-Security: max-age=31536000; includeSubDomains"
+        ]
+      }
+    ],
+    recommendation:
+      "Geçersiz SSL sertifikaları MITM saldırılarına kapı açar. Sertifika otomasyonu kurun."
+  },
+
+  cors_misconfig: {
+    severity: "medium",
+    title: "CORS Yanlış Yapılandırma",
+    steps: [
+      {
+        title: "Access-Control-Allow-Origin'i kısıtlayın",
+        items: [
+          "Wildcard (*) kullanmayın",
+          "Sadece güvenilir origin'lere izin verin: Access-Control-Allow-Origin: https://yourdomain.com"
+        ]
+      },
+      {
+        title: "Credential'lı isteklerde dikkatli olun",
+        items: [
+          "Access-Control-Allow-Credentials: true ise wildcard origin kesinlikle kullanmayın",
+          "Origin whitelist mekanizması kurun"
+        ]
+      }
+    ],
+    recommendation:
+      "CORS yanlış yapılandırması, hassas verilerin yetkisiz domain'ler tarafından okunmasına yol açar."
+  },
+
+  missing_headers: {
+    severity: "low",
+    title: "Güvenlik Başlıkları Eksik",
+    steps: [
+      {
+        title: "Temel güvenlik başlıklarını ekleyin",
+        items: [
+          "X-Content-Type-Options: nosniff",
+          "X-Frame-Options: DENY veya SAMEORIGIN",
+          "X-XSS-Protection: 1; mode=block",
+          "Referrer-Policy: strict-origin-when-cross-origin"
+        ]
+      },
+      {
+        title: "Content Security Policy ekleyin",
+        items: [
+          "Content-Security-Policy: default-src 'self'; script-src 'self'",
+          "İhtiyaçlarınıza göre policy'yi özelleştirin"
+        ]
+      },
+      {
+        title: "Permissions Policy ekleyin",
+        items: [
+          "Permissions-Policy: camera=(), microphone=(), geolocation=()"
+        ]
+      }
+    ],
+    recommendation:
+      "Güvenlik başlıkları tarayıcı seviyesinde ek koruma sağlar. Tüm response'lara ekleyin."
+  },
+
+  open_redirect: {
+    severity: "medium",
+    title: "Açık Yönlendirme (Open Redirect)",
+    steps: [
+      {
+        title: "Yönlendirme URL'lerini doğrulayın",
+        items: [
+          "Kullanıcı girdisinden gelen URL'leri doğrudan redirect'e kullanmayın",
+          "Whitelist yaklaşımı: Sadece izin verilen domain'lere yönlendirin"
+        ]
+      },
+      {
+        title: "Göreceli URL kullanın",
+        items: [
+          "Tam URL yerine göreceli path kullanın: /dashboard vs https://evil.com",
+          "URL'in sizin domain'inize ait olduğunu kontrol edin"
+        ]
+      }
+    ],
+    recommendation:
+      "Open redirect, phishing saldırılarında güvenilir domain'inizi kullanarak kurbanları kandırmak için kullanılabilir."
+  },
+
+  weak_password: {
+    severity: "high",
+    title: "Zayıf Şifre Politikası",
+    steps: [
+      {
+        title: "Güçlü şifre politikası uygulayın",
+        items: [
+          "Minimum 12 karakter zorunlu kılın",
+          "Büyük/küçük harf, rakam ve özel karakter zorunluluğu",
+          "Yaygın şifreleri (password123, admin vb.) engelleyin"
+        ]
+      },
+      {
+        title: "Ek güvenlik önlemleri",
+        items: [
+          "Çok faktörlü kimlik doğrulama (MFA/2FA) ekleyin",
+          "Hesap kilitleme: 5 başarısız denemeden sonra geçici kilitleme",
+          "Brute-force koruması için rate limiting uygulayın"
+        ]
+      }
+    ],
+    recommendation:
+      "Zayıf şifreler en yaygın saldırı vektörüdür. MFA ile desteklenmiş güçlü şifre politikası zorunludur."
+  },
+
+  dns_zone_transfer: {
+    severity: "high",
+    title: "DNS Zone Transfer Açık",
+    steps: [
+      {
+        title: "Zone transfer'i kısıtlayın",
+        items: [
+          "BIND: allow-transfer { trusted-servers; };",
+          "Windows DNS: Zone Properties → Zone Transfers → Only to listed servers",
+          "Sadece yetkili secondary DNS sunucularına izin verin"
+        ]
+      },
+      {
+        title: "DNSSEC etkinleştirin",
+        items: [
+          "DNS yanıtlarının bütünlüğünü doğrulamak için DNSSEC kullanın",
+          "Zone signing yapılandırın"
+        ]
+      }
+    ],
+    recommendation:
+      "Açık zone transfer, saldırganlara tüm DNS kayıtlarınızı ve altyapı bilgilerinizi ifşa eder."
+  },
+
+  vnc: {
+    severity: "high",
+    title: "VNC (5900/TCP) Açık",
+    steps: [
+      {
+        title: "VNC erişimini kısıtlayın",
+        items: [
+          "VNC'yi doğrudan internete açmayın",
+          "SSH tüneli üzerinden erişim sağlayın: ssh -L 5900:localhost:5900 user@server"
+        ]
+      },
+      {
+        title: "Güçlü şifre kullanın",
+        items: [
+          "VNC şifresini en az 8 karakterli, karmaşık yapın",
+          "Mümkünse VNC yerine SSH + X11 forwarding kullanın"
+        ]
+      }
+    ],
+    recommendation:
+      "VNC trafiği varsayılan olarak şifrelenmemiştir. SSH tüneli olmadan kullanmayın."
+  },
+
+  redis: {
+    severity: "high",
+    title: "Redis (6379/TCP) Açık",
+    steps: [
+      {
+        title: "Redis'i localhost'a bağlayın",
+        items: [
+          "redis.conf: bind 127.0.0.1",
+          "protected-mode yes"
+        ]
+      },
+      {
+        title: "Şifre koruması ekleyin",
+        items: [
+          "redis.conf: requirepass <güçlü-şifre>",
+          "Dangerous komutları devre dışı bırakın: rename-command FLUSHALL \"\""
+        ]
+      }
+    ],
+    recommendation:
+      "Korumasız Redis sunucuları anında ele geçirilebilir. Asla internete açık bırakmayın."
+  },
+
+  mongodb: {
+    severity: "high",
+    title: "MongoDB (27017/TCP) Açık",
+    steps: [
+      {
+        title: "MongoDB'yi localhost'a bağlayın",
+        items: [
+          "mongod.conf: bindIp: 127.0.0.1",
+          "Servisi yeniden başlatın"
+        ]
+      },
+      {
+        title: "Kimlik doğrulama etkinleştirin",
+        items: [
+          "mongod.conf: security.authorization: enabled",
+          "Admin kullanıcısı oluşturun",
+          "Uygulamalar için ayrı, kısıtlı yetkili kullanıcılar tanımlayın"
+        ]
+      }
+    ],
+    recommendation:
+      "Kimlik doğrulaması olmayan MongoDB sunucuları, internetteki en yaygın hedeflerdendir."
   }
-  // Buraya zamanla yeni zafiyet türleri ekleyebilirsin
 };
 
 module.exports = {
