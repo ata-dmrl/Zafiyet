@@ -6,9 +6,11 @@ const { runNmap, runNmapFull } = require("./runners/nmapRunner");
 const { runZap, runZapFull } = require("./runners/zapRunner");
 const { generateTxtReport, generateHtmlReport, generateJsonReport } = require("./reportGenerator");
 const { checkAllTools, getToolStatus } = require("./toolCheck");
+const { applyAutoFix } = require("./autoFixer");
 const fs = require("fs");
 const path = require("path");
 const net = require("net");
+const readline = require("readline");
 
 class XasContext {
   constructor() {
@@ -45,6 +47,22 @@ function printFixGuide(fixKey) {
 
   console.log(`\n  \x1b[33m💡 Öneri:\x1b[0m`);
   console.log(`     ${guide.recommendation}\n`);
+
+  if (guide.autoFix) {
+    console.log(`  \x1b[35m[!] Bu zafiyet için OTOMATİK DÜZELTME (Auto-Fix) mevcuttur.\x1b[0m`);
+    console.log(`      Otomatik kapatmak için \x1b[36mfix auto <id>\x1b[0m komutunu kullanabilirsiniz.\n`);
+  }
+}
+
+function askConfirmation(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  return new Promise(resolve => rl.question(query, ans => {
+    rl.close();
+    resolve(ans);
+  }));
 }
 
 function printHelp() {
@@ -78,6 +96,7 @@ function printHelp() {
   search <anahtar kelime>        Zafiyet ara
   detail <id>                    Zafiyet detaylarını göster
   fix <id>                       Fix rehberi göster
+  fix auto <id>                  Zafiyeti otomatik düzelt (varsa)
   stats                          Zafiyet istatistikleri
 
   \x1b[33m─── RAPORLAMA ───\x1b[0m
@@ -117,7 +136,11 @@ function printIssueDetail(issue) {
 `);
 
   if (issue.fixKey && FIX_GUIDES[issue.fixKey]) {
-    console.log("  \x1b[33m💡 Fix rehberi mevcut: \x1b[0m\x1b[36mfix " + issue.id + "\x1b[0m komutu ile görüntüleyebilirsiniz.\n");
+    console.log("  \x1b[33m💡 Fix rehberi mevcut: \x1b[0m\x1b[36mfix " + issue.id + "\x1b[0m");
+    if (FIX_GUIDES[issue.fixKey].autoFix) {
+      console.log("  \x1b[35m⚡ Otomatik düzeltme mevcut: \x1b[0m\x1b[36mfix auto " + issue.id + "\x1b[0m");
+    }
+    console.log("");
   }
 }
 
@@ -375,9 +398,53 @@ async function handleCommand(ctx, line) {
 
     // ──────── FIX ────────
     case "fix": {
+      if (args[0] === "auto") {
+        const id = parseInt(args[1], 10);
+        if (isNaN(id)) {
+          console.log("\x1b[31m  Kullanım: fix auto <id>\x1b[0m");
+          break;
+        }
+
+        const issue = ctx.issues.find(i => i.id === id);
+        if (!issue) {
+          console.log("\x1b[31m  Bu ID'ye ait zafiyet bulunamadı.\x1b[0m");
+          break;
+        }
+
+        if (!issue.fixKey || !FIX_GUIDES[issue.fixKey] || !FIX_GUIDES[issue.fixKey].autoFix) {
+          console.log("\x1b[33m  Bu zafiyet için otomatik düzeltme (Auto-Fix) tanımlanmamış.\x1b[0m");
+          console.log("  Lütfen `fix " + id + "` yazarak manuel çözüm adımlarını izleyin.");
+          break;
+        }
+
+        const autoFixDef = FIX_GUIDES[issue.fixKey].autoFix;
+        console.log(`\n\x1b[35m  [!] OTOMATİK DÜZELTME BAŞLATILACAK: \x1b[0m${autoFixDef.description}`);
+        console.log(`  \x1b[31mUYARI: Sistem güvenlik duvarı veya servis yapılandırması değiştirilecek.\x1b[0m`);
+
+        const ans = await askConfirmation("  Devam etmek istiyor musunuz? (E/H): ");
+        if (ans.toLowerCase() === "e" || ans.toLowerCase() === "y") {
+          console.log("\x1b[36m  [*] Düzeltme uygulanıyor...\x1b[0m");
+          const result = applyAutoFix(autoFixDef);
+
+          if (result.success) {
+            console.log(`\x1b[32m  [✔] Otomatik düzeltme başarıyla uygulandı!\x1b[0m`);
+            if (result.output && result.output.trim()) {
+              console.log(`\x1b[90m  Çıktı:\n  ${result.output.trim()}\x1b[0m`);
+            }
+          } else {
+            console.log(`\x1b[31m  [✘] Otomatik düzeltme başarısız oldu.\x1b[0m`);
+            console.log(`  Hata Detayı: ${result.error}`);
+            console.log(`  \x1b[33mLütfen yönetici/root ayrıcalıklarıyla çalıştırdığınızdan emin olun.\x1b[0m`);
+          }
+        } else {
+          console.log("\x1b[33m  [*] İşlem iptal edildi.\x1b[0m");
+        }
+        break;
+      }
+
       const id = parseInt(args[0], 10);
       if (isNaN(id)) {
-        console.log("\x1b[31m  Kullanım: fix <id>\x1b[0m");
+        console.log("\x1b[31m  Kullanım: fix <id> veya fix auto <id>\x1b[0m");
         break;
       }
       const issue = ctx.issues.find(i => i.id === id);

@@ -71,7 +71,12 @@ const FIX_GUIDES = {
         ]
       }
     ],
-    recommendation: "Telnet yerine SSH (22/TCP) kullanın, çünkü Telnet trafiği şifrelenmemiştir."
+    recommendation: "Telnet yerine SSH (22/TCP) kullanın, çünkü Telnet trafiği şifrelenmemiştir.",
+    autoFix: {
+      description: "23/TCP (Telnet) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block Telnet (23)" dir=in action=block protocol=TCP localport=23',
+      linux: 'sudo ufw deny 23/tcp'
+    }
   },
 
   ftp: {
@@ -93,7 +98,12 @@ const FIX_GUIDES = {
       }
     ],
     recommendation:
-      "FTP trafiği şifrelenmemiştir, hassas veriler için daima şifreli protokoller kullanın."
+      "FTP trafiği şifrelenmemiştir, hassas veriler için daima şifreli protokoller kullanın.",
+    autoFix: {
+      description: "21/TCP (FTP) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block FTP (21)" dir=in action=block protocol=TCP localport=21',
+      linux: 'sudo ufw deny 21/tcp'
+    }
   },
 
   rdp: {
@@ -116,7 +126,12 @@ const FIX_GUIDES = {
       }
     ],
     recommendation:
-      "RDP'yi mümkün olduğunca sınırlandırın ve mutlaka güçlü kimlik doğrulama uygulayın."
+      "RDP'yi mümkün olduğunca sınırlandırın ve mutlaka güçlü kimlik doğrulama uygulayın.",
+    autoFix: {
+      description: "3389/TCP (RDP) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block RDP (3389)" dir=in action=block protocol=TCP localport=3389',
+      linux: 'sudo ufw deny 3389/tcp'
+    }
   },
 
   xss: {
@@ -193,7 +208,12 @@ const FIX_GUIDES = {
       }
     ],
     recommendation:
-      "SMB portunu internete açmayın. EternalBlue gibi kritik exploitler bu port üzerinden çalışır."
+      "SMB portunu internete açmayın. EternalBlue gibi kritik exploitler bu port üzerinden çalışır.",
+    autoFix: {
+      description: "445/TCP (SMB) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block SMB (445)" dir=in action=block protocol=TCP localport=445',
+      linux: 'sudo ufw deny 445/tcp'
+    }
   },
 
   mysql: {
@@ -222,7 +242,12 @@ const FIX_GUIDES = {
       }
     ],
     recommendation:
-      "Veritabanı portlarını asla doğrudan internete açmayın. SSH tüneli veya VPN kullanın."
+      "Veritabanı portlarını asla doğrudan internete açmayın. SSH tüneli veya VPN kullanın.",
+    autoFix: {
+      description: "3306/TCP (MySQL) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block MySQL (3306)" dir=in action=block protocol=TCP localport=3306',
+      linux: 'sudo ufw deny 3306/tcp'
+    }
   },
 
   mssql: {
@@ -252,7 +277,12 @@ const FIX_GUIDES = {
       }
     ],
     recommendation:
-      "MSSQL portunu internete açmayın. Brute-force saldırıları bu porta sıkça yapılır."
+      "MSSQL portunu internete açmayın. Brute-force saldırıları bu porta sıkça yapılır.",
+    autoFix: {
+      description: "1433/TCP (MSSQL) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block MSSQL (1433)" dir=in action=block protocol=TCP localport=1433',
+      linux: 'sudo ufw deny 1433/tcp'
+    }
   },
 
   ssh_weak: {
@@ -514,7 +544,12 @@ const FIX_GUIDES = {
       }
     ],
     recommendation:
-      "VNC trafiği varsayılan olarak şifrelenmemiştir. SSH tüneli olmadan kullanmayın."
+      "VNC trafiği varsayılan olarak şifrelenmemiştir. SSH tüneli olmadan kullanmayın.",
+    autoFix: {
+      description: "5900/TCP (VNC) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block VNC (5900)" dir=in action=block protocol=TCP localport=5900',
+      linux: 'sudo ufw deny 5900/tcp'
+    }
   },
 
   redis: {
@@ -537,7 +572,12 @@ const FIX_GUIDES = {
       }
     ],
     recommendation:
-      "Korumasız Redis sunucuları anında ele geçirilebilir. Asla internete açık bırakmayın."
+      "Korumasız Redis sunucuları anında ele geçirilebilir. Asla internete açık bırakmayın.",
+    autoFix: {
+      description: "6379/TCP (Redis) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block Redis (6379)" dir=in action=block protocol=TCP localport=6379',
+      linux: 'sudo ufw deny 6379/tcp'
+    }
   },
 
   mongodb: {
@@ -561,7 +601,12 @@ const FIX_GUIDES = {
       }
     ],
     recommendation:
-      "Kimlik doğrulaması olmayan MongoDB sunucuları, internetteki en yaygın hedeflerdendir."
+      "Kimlik doğrulaması olmayan MongoDB sunucuları, internetteki en yaygın hedeflerdendir.",
+    autoFix: {
+      description: "27017/TCP (MongoDB) portunu firewall üzerinden engeller.",
+      windows: 'netsh advfirewall firewall add rule name="XAS: Block MongoDB (27017)" dir=in action=block protocol=TCP localport=27017',
+      linux: 'sudo ufw deny 27017/tcp'
+    }
   }
 };
 
